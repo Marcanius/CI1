@@ -41,47 +41,61 @@ class Program
 
         // If solution found, return it + statistics
 
-        
+
     }
 }
 
+//TODO
+//Parse txt to string
+// Print Sudoku
+// The loop
+
 class Sudoku
 {
-    int dims, sqrtDims;
+    int N, sqrtDims;
     int[] things;
 
-    public Sudoku( int Dim = 9 )
+    public Sudoku( int Dim = 9, string ParsedFile = "" )
     {
-        dims = Dim;
+        N = Dim;
         sqrtDims = (int)Math.Sqrt( Dim );
-        things = new int[ dims * dims ];
-        for ( int i = 0; i < things.Length; i++ )
-            things[ i ] = i;
+        // Fill the sudoku with numbers
+        if ( ParsedFile.Length < N * N )
+        {
+            things = new int[ N * N ];
+            for ( int i = 0; i < things.Length; i++ )
+                things[ i ] = i;
+        }
+        // Fill the sudoku with the string.
+        else
+        {
+
+        }
     }
 
     public int[] Row( int Which )
     {
-        int[] result = new int[ dims ];
+        int[] result = new int[ N ];
 
-        for ( int i = 0; i < dims; i++ )
-            result[ i ] = things[ Which * dims + i ];
+        for ( int i = 0; i < N; i++ )
+            result[ i ] = things[ Which * N + i ];
 
         return result;
     }
 
     public int[] Col( int Which )
     {
-        int[] result = new int[ dims ];
+        int[] result = new int[ N ];
 
-        for ( int i = 0; i < dims; i++ )
-            result[ i ] = things[ i * dims + Which ];
+        for ( int i = 0; i < N; i++ )
+            result[ i ] = things[ i * N + Which ];
 
         return result;
     }
 
     public int[] Block( int Which )
     {
-        int[] result = new int[ dims ];
+        int[] result = new int[ N ];
 
         // Take all the rows that form the block, and with the correct offset, write the relevant spaces to the result.
         int[] currentRow;
