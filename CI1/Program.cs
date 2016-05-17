@@ -11,7 +11,7 @@ class Program
     {
         #region String Parse Test
 
-        int[] toPrint = ParseTxtToString( "C:\\Users\\Matthijs\\stack\\UU\\CI\\Prac1\\CI1\\CI1\\TestSudokuVeryEz.txt" );
+        int[] toPrint = ParseTxtToString("E:\\Documents\\Visual Studio 2015\\Projects\\CI 1\\CI1\\CI1\\TestSudokuVeryEz.txt");
 
         for ( int i = 0; i < Math.Sqrt( toPrint.Length ); i++ )
         {
@@ -87,6 +87,95 @@ class Program
 
         return result;
     }
+
+    public Sudoku BackTrack(Stack<Sudoku> L)
+    {
+        Sudoku t;
+        Sudoku t2;
+        if (L.Count == 0)
+        {
+            return null;
+        }
+        else
+        {
+            t = L.First();
+
+            if (Goal(t))
+            {
+                return t;
+            }
+            else
+            {
+                while ((t2 = NextSuccessor(t).Child) != null)
+                {
+                    //and not found??
+                    L.Push(t2);
+                    BackTrack(L);
+                }
+                L.Pop();
+            }
+        }
+        return null;
+    }
+
+    public SuccessorPair NextSuccessor(Sudoku t)
+    {
+        SuccessorPair s;
+        s.Parent = null;
+        s.Child = null;
+        //s.isNull = false;
+        s.Parent = t;
+
+        if (t.lastChanged == -1) //nieuwe puzzel
+        {
+            for (int i = 0; i < t.N * t.N; i++)
+            {
+                if (t.things[i] == 0)
+                {
+                    s.Parent.lastChanged = i;
+                    s.Child = s.Parent;
+                    s.Child.things[i] = 1;
+                    return s;
+                }
+            }
+        }
+        else //"aangebroken" functie
+        {
+
+        }
+
+
+
+
+        return s;
+    }
+
+    public struct SuccessorPair
+    {
+        public Sudoku Parent;
+        public Sudoku Child;
+        //public bool isNull;
+    }
+
+
+    public bool ValidMove(Sudoku t, int pos, int n)
+    {
+        if (t.Row(pos).Contains(n) || t.Col(pos).Contains(n) || t.Block(pos).Contains(n))
+        {
+            return false;
+        }
+        return true;
+    }
+
+
+    public bool Goal(Sudoku t)
+    {
+        if (t.things.Contains(0))
+        {
+            return false;
+        }
+        return true;
+    }
 }
 
 //TODO
@@ -95,13 +184,15 @@ class Program
 // The loop
 // Next-succ methode met alleen passende getallen
 
-class Sudoku
+public class Sudoku
 {
-    int N, sqrtN;
-    int[] things;
+    public int N, sqrtN;
+    public int[] things;
+    public int lastChanged;
 
-    public Sudoku( int[] Content = null, int Dim = 9 )
+    public Sudoku( int[] Content = null, int Dim = 9, int lastChanged = -1)
     {
+        this.lastChanged = lastChanged;
         N = Dim;
         sqrtN = (int)Math.Sqrt( Dim );
         // Fill the sudoku with numbers
