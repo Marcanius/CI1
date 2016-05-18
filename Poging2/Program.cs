@@ -16,12 +16,12 @@ namespace Poging2
 
         static void Main(string[] args)
         {
-            N = 9;
+            N = 16;
             Nsq = N * N;
             sqrtN = (int)Math.Sqrt(N);
             Sudoku = new int[Nsq];
             positionsChanged = new Stack<int>();
-            Sudoku = ParseTxtToArray("E:\\Documents\\Visual Studio 2015\\Projects\\CI 1\\CI1\\CI1\\TestSudokuVeryEz.txt");
+            Sudoku = ParseTxtToArray("E:\\Documents\\Visual Studio 2015\\Projects\\CI 1\\CI1\\CI1\\TestSudokuNotVeryEz.txt");
             
             BackTrack();
             Print();
@@ -52,7 +52,7 @@ namespace Poging2
             {
                 if (done)
                     return;
-                Print();
+                //Print();
                 BackTrack();
                 if (done)
                     return;
