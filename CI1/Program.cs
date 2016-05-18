@@ -28,7 +28,12 @@ class Program
                 sdk.possibleMoves[i] = GetMoves(sdk, i);
             }
         }
-        sdk.Print();
+        sdk.lastChanged = 0;
+        
+        
+        Sudoku nextSdk = BackTrack(sdk);
+        
+        nextSdk.Print();
         #endregion
 
         #region Sudoku Class Test
@@ -93,80 +98,146 @@ class Program
         }
 
         return result;
+
     }
 
-    public Sudoku BackTrack(Stack<Sudoku> L)
+    public static Sudoku BackTrack(Sudoku sdk)
     {
-        Sudoku t;
-        Sudoku t2;
-        if (L.Count == 0)
-        {
+        //    Sudoku t;
+        //    Sudoku t2;
+        //    if (L.Count == 0)
+        //    {
+        //        return null;
+        //    }
+        //    else
+        //    {
+        //        t = L.First();
+
+        //        if (Goal(t))
+        //        {
+        //            return t;
+        //        }
+        //        else
+        //        {
+        //            while ((t2 = NextSuccessor(t).Child) != null)
+        //            {
+        //                //and not found??
+        //                L.Push(t2);
+        //                Sudoku result = BackTrack(L);
+        //                if (result != null)
+        //                {
+        //                    return result;
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return null;
+        if (Failure(sdk))
             return null;
-        }
-        else
-        {
-            t = L.First();
+        
+        if (Goal(sdk))        
+            return sdk;
+        
+        Sudoku child = FirstSuccessor(sdk);
+        child.Print();
+        Sudoku result = BackTrack(child);
 
-            if (Goal(t))
-            {
-                return t;
-            }
+        while (result == null)
+        {
+            child = NextSuccessor(sdk);
+
+            if (child == null)
+                return null;
             else
-            {
-                while ((t2 = NextSuccessor(t).Child) != null)
-                {
-                    //and not found??
-                    L.Push(t2);
-                    BackTrack(L);
-                }
-                L.Pop();
-            }
+                child.Print();
+                result = BackTrack(child);
         }
-        return null;
+        return result;        
     }
 
-    public SuccessorPair NextSuccessor(Sudoku t)
+    public static bool Failure(Sudoku sdk)
     {
-        SuccessorPair s;
-        s.Child = t;//s.isNull = false;
+        if (sdk == null)
+            return true;
+                
+        return !ValidMove(sdk, sdk.lastChanged);
+    }
+
+    public static Sudoku FirstSuccessor(Sudoku sdk)
+    {
+        int i = GetNextEmptyPos(sdk);
+
+        if (i == -1)
+            return null;
+
+        Sudoku result = sdk;
+        result.things[i]++;
+        result.lastChanged = i;
+
+        return result;
+    } 
+
+    public static Sudoku NextSuccessor(Sudoku sdk)
+    {/*
+        SuccessorPair s = new SuccessorPair();
+        s.Child = t;
         s.Parent = t;
 
         if (t.lastChanged == -1) //nieuwe puzzel
         {
-            for (int i = 0; i < t.N * t.N; i++)
-            {
-                if (t.things[i] == 0)
-                {
-                    s.Parent.lastChanged = i;
-                    s.Child = s.Parent;
-                    s.Child.things[i] = 1;
-                    return s;
-                }
-            }
+            int i = 0;
+            while ((t.possibleMoves[i] == null || t.possibleMoves[i].Count == 0) && i <= t.N * t.N)
+                i++;
+            
+            if (i == t.N * t.N) //hele puzzel gehad
+                return null; 
+
+            s.Child.things[i] = s.Child.possibleMoves[i].Dequeue();
+            s.Child.lastChanged = i;
         }
         else //"aangebroken" functie
         {
-            if (t.things[t.lastChanged] < 8)
+            int i = t.lastChanged;
+            if (s.Child.possibleMoves[i] != null && s.Child.possibleMoves[i].Count > 0)
             {
-                if (ValidMove(t, t.lastChanged, t.things[t.lastChanged] + 1))
-                {
-                    s.Child.things[t.lastChanged]++;
-                    return s;
-                }
+                s.Child.things[i] = s.Child.possibleMoves[i].Dequeue();
+                s.Child.lastChanged = i;
+            }
+            else
+            {
+                while (s.Child.possibleMoves[i] == null || s.Child.possibleMoves[i].Count == 0)
+                    i++;                
 
+                s.Child.things[i] = s.Child.possibleMoves[i].Dequeue();
+                s.Child.lastChanged = i;
             }
         }
-
-
-
-
         return s;
+        */
+        if (sdk.things[sdk.lastChanged] == 9)
+            return null;
+        else
+            sdk.things[sdk.lastChanged]++;
+        return sdk;
     }
 
-    public struct SuccessorPair
+    public class SuccessorPair
     {
         public Sudoku Parent;
         public Sudoku Child;
+    }
+
+    public static int GetNextEmptyPos(Sudoku t)
+    {
+        int pos = 0;
+                
+        while (pos < t.N * t.N && t.things[pos] != 0)
+            pos++;
+        
+        if (pos == t.N * t.N)        
+            return -1;
+        
+        return pos;
     }
 
     public static Queue<int> GetMoves(Sudoku t, int pos)
@@ -175,7 +246,7 @@ class Program
 
         for (int i = t.things[pos] + 1; i < 10; i++)
         {
-            if (ValidMove(t, pos, i))
+            if (ValidMove(t, pos))
             {
                 result.Enqueue(i);
             }
@@ -183,13 +254,26 @@ class Program
         return result;
     }
 
-    public static bool ValidMove(Sudoku t, int pos, int n)
+    public static bool ValidMove(Sudoku sdk, int pos)
     {
-        if (t.Row(pos/t.N).Contains(n) || t.Col(pos%t.N).Contains(n) || t.Block((pos/t.N/t.sqrtN*t.sqrtN) + pos%t.N/t.sqrtN).Contains(n))
-        {
+        int n = sdk.things[pos];
+        int colPos = pos % sdk.N;
+        int rowPos = pos / sdk.N;
+        int[] row = sdk.Row(rowPos);
+        int[] col = sdk.Col(colPos);
+        int[] block = sdk.Block((rowPos / sdk.sqrtN * sdk.sqrtN) + colPos / sdk.sqrtN);
+        
+        if (HasDuplicate(row, n) || HasDuplicate(col, n) || HasDuplicate(block, n))        
             return false;
-        }
+        
         return true;
+    }
+
+    public static bool HasDuplicate(int[] array, int n)
+    {
+        if (Array.FindAll(array, x => x == n).Length > 1)
+            return true;
+        return false;
     }
 
 
@@ -218,7 +302,7 @@ public class Sudoku
 
     public Sudoku(int[] Content = null, int Dim = 9, int lastChanged = -1)
     {
-        
+
         this.lastChanged = lastChanged;
         N = Dim;
         sqrtN = (int)Math.Sqrt(Dim);
@@ -274,6 +358,7 @@ public class Sudoku
             }
             Console.Write("\n");
         }
+        Console.WriteLine("");
     }
 
     #region Return Content
