@@ -12,6 +12,7 @@ namespace Poging2
         static int[] Sudoku;
         static Stack<int> positionsChanged;
         static int N, Nsq, sqrtN;
+        static bool done = false;
 
         static void Main(string[] args)
         {
@@ -28,11 +29,7 @@ namespace Poging2
         }
 
         static void BackTrack()
-        {
-            if(Sudoku[6] == 6 && Sudoku[7] == 9 && Sudoku[8] == 2)
-            {
-
-            }
+        {  
             // Faillure
             if (FaillureTest())
             {
@@ -43,6 +40,7 @@ namespace Poging2
             if (!Sudoku.Contains(0))
             {
                 Console.WriteLine("Done and found!");
+                done = true;
                 return;
             }
 
@@ -52,8 +50,12 @@ namespace Poging2
             // NextS
             while (NextSuccessor())
             {
+                if (done)
+                    return;
                 Print();
                 BackTrack();
+                if (done)
+                    return;
             }
         }
 
@@ -67,7 +69,7 @@ namespace Poging2
         static bool NextSuccessor()
         {
             int pos = positionsChanged.First();
-            if (Sudoku[pos] == 9)
+            if (Sudoku[pos] == N)
             {
                 positionsChanged.Pop();
                 Sudoku[pos] = 0;
@@ -178,28 +180,35 @@ namespace Poging2
         }
 
         static int[] ParseTxtToArray(string Path)
-        {
-            string CompiledString = "";
-
+        {            
+            string[] totString = new string[Nsq];
             StreamReader sr = new StreamReader(Path);
             String read = sr.ReadLine();
+            String[] sa;
+            int offset = 0;
             while (read != null && read != "")
             {
-                CompiledString += read;
+                sa = read.Split(' ');
+                for (int j = 0; j < N; j++)
+                {
+                    totString[offset + j] = sa[j];
+                }    
+                
                 read = sr.ReadLine();
+                offset += N;
             }
 
-            int[] result = new int[CompiledString.Length];
+            int[] result = new int[Nsq];
 
             // Traverse the entire string, adding the chars to the array in int form.
-            for (int i = 0; i < CompiledString.Length; i++)
+            for (int i = 0; i < Nsq; i++)
             {
                 // An empty space
-                if (CompiledString[i] == '.')
+                if (totString[i] == ".")
                     result[i] = 0;
                 // A non-empty space
                 else
-                    result[i] = int.Parse("" + CompiledString[i]);
+                    result[i] = int.Parse(totString[i]);
             }
 
             return result;
