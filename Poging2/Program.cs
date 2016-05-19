@@ -86,7 +86,7 @@ namespace Poging2
                         MovesPerFreeSpace.Add(resultSpace);
                     }
                 }
-                MovesPerFreeSpace.Sort((x, y) => y.Item2.CompareTo(x.Item2));
+                MovesPerFreeSpace.Sort((x, y) => x.Item2.CompareTo(y.Item2));
                 result = new int[MovesPerFreeSpace.Count];
                 for (int i = 0; i < MovesPerFreeSpace.Count; i++)
                 {
