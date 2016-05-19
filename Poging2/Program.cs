@@ -9,37 +9,88 @@ namespace Poging2
 {
     class Program
     {
-        static int[] Sudoku;
+        static int[] Sudoku, positionsFree;
         static Stack<int> positionsChanged;
         static int N, Nsq, sqrtN;
         static bool done = false;
 
-        static void Main(string[] args)
+        static void Main( string[] args )
         {
-            N = 16;
+            N = 9;
             Nsq = N * N;
-            sqrtN = (int)Math.Sqrt(N);
-            Sudoku = new int[Nsq];
+            sqrtN = (int)Math.Sqrt( N );
+            Sudoku = new int[ Nsq ];
             positionsChanged = new Stack<int>();
-            Sudoku = ParseTxtToArray("E:\\Documents\\Visual Studio 2015\\Projects\\CI 1\\CI1\\CI1\\TestSudokuNotVeryEz.txt");
+            // Fill the empty Sudoku
+            Sudoku = ParseTxtToArray( "C:\\Users\\matti_000\\Desktop\\CI1\\CI1\\TestSudokuVeryEz.txt" );
             
+            positionsFree = getFreePoss(false);
+
+            // Do The Twerk(tm)
             BackTrack();
             Print();
             Console.ReadLine();
         }
 
+        static int[] getFreePoss( bool nonVariant = true )
+        {
+            int[] result = new int[ Nsq ];
+            List<Tuple<int, int>> MovesPerFreeSpace = new List<Tuple<int, int>>();
+            int j = 0;
+
+            if ( nonVariant )
+                for ( int i = 0; i < Nsq; i++ )
+                {
+                    if ( Sudoku[ i ] == 0 )
+                    {
+                        result[ j ] = i;
+                        j++;
+                    }
+                }
+            else
+            {
+                for ( int i = 0; i < Nsq; i++ )
+                {
+                    if ( Sudoku[ i ] == 0 )
+                    {
+                        int itemTwo = 0;
+                        for ( int n = 1; n <= N; n++ )
+                        {
+                            int colPos = i % N;
+                            int rowPos = i / N;
+
+                            int[] row = Row( rowPos );
+                            int[] col = Col( colPos );
+                            int[] block = Block( (rowPos / sqrtN * sqrtN) + colPos / sqrtN );
+
+                            if ( !HasDuplicate( row, n ) &&
+                                 !HasDuplicate( col, n ) &&
+                                 !HasDuplicate( block, n ) )
+                                itemTwo++;
+                        }
+                        Tuple<int, int> resultSpace = new Tuple<int, int>( i, itemTwo );
+                        MovesPerFreeSpace.Add( resultSpace );
+                    }
+                }
+                MovesPerFreeSpace.Sort( ( x, y ) => y.Item2.CompareTo( x.Item2 ) );
+            }
+            return result;
+        }
+
+        #region Backtrack
+
         static void BackTrack()
-        {  
+        {
             // Faillure
-            if (FaillureTest())
+            if ( FailureTest() )
             {
                 //NextSuccessor();
                 return;
             }
             // Goal
-            if (!Sudoku.Contains(0))
+            if ( !Sudoku.Contains( 0 ) )
             {
-                Console.WriteLine("Done and found!");
+                Console.WriteLine( "Done and found!" );
                 done = true;
                 return;
             }
@@ -48,13 +99,13 @@ namespace Poging2
             FirstSuccessor();
 
             // NextS
-            while (NextSuccessor())
+            while ( NextSuccessor() )
             {
-                if (done)
+                if ( done )
                     return;
                 //Print();
                 BackTrack();
-                if (done)
+                if ( done )
                     return;
             }
         }
@@ -62,101 +113,105 @@ namespace Poging2
         static void FirstSuccessor()
         {
             int n = FindFirstEmpty();
-            if (n >= 0) // Sudoku is full
-                positionsChanged.Push(n);
+            if ( n >= 0 ) // Sudoku is full
+                positionsChanged.Push( n );
         }
 
         static bool NextSuccessor()
         {
             int pos = positionsChanged.First();
-            if (Sudoku[pos] == N)
+            if ( Sudoku[ pos ] == N )
             {
                 positionsChanged.Pop();
-                Sudoku[pos] = 0;
+                Sudoku[ pos ] = 0;
                 return false;
             }
             else
             {
-                Sudoku[pos]++;
+                Sudoku[ pos ]++;
                 return true;
             }
         }
 
-        static bool FaillureTest()
+        static bool FailureTest()
         {
-            if (positionsChanged.Count == 0) // begin
+            if ( positionsChanged.Count == 0 ) // begin
             {
                 return false;
             }
 
             int pos = positionsChanged.First();
 
-            int n = Sudoku[pos];
-            if (n == 0)
+            int n = Sudoku[ pos ];
+            if ( n == 0 )
                 return false;
 
             int colPos = pos % N;
             int rowPos = pos / N;
 
-            int[] row = Row(rowPos);
-            int[] col = Col(colPos);
-            int[] block = Block((rowPos / sqrtN * sqrtN) + colPos / sqrtN);
+            int[] row = Row( rowPos );
+            int[] col = Col( colPos );
+            int[] block = Block( (rowPos / sqrtN * sqrtN) + colPos / sqrtN );
 
-            if (HasDuplicate(row, n) || HasDuplicate(col, n) || HasDuplicate(block, n))
+            if ( HasDuplicate( row, n ) || HasDuplicate( col, n ) || HasDuplicate( block, n ) )
                 return true;
 
             return false;
         }
 
-        public static bool HasDuplicate(int[] array, int n)
+        public static bool HasDuplicate( int[] array, int n )
         {
-            if (Array.FindAll(array, x => x == n).Length > 1)
+            if ( Array.FindAll( array, x => x == n ).Length > 1 )
                 return true;
             return false;
         }
 
-        static int[] Row(int which)
-        {
-            int[] result = new int[N];
+        #endregion
 
-            for (int i = 0; i < N; i++)
-                result[i] = Sudoku[which * N + i];
+        #region Pretty Sudoku
+
+        static int[] Row( int which )
+        {
+            int[] result = new int[ N ];
+
+            for ( int i = 0; i < N; i++ )
+                result[ i ] = Sudoku[ which * N + i ];
 
             return result;
         }
 
-        static int[] Col(int which)
+        static int[] Col( int which )
         {
-            int[] result = new int[N];
+            int[] result = new int[ N ];
 
-            for (int i = 0; i < N; i++)
-                result[i] = Sudoku[i * N + which];
+            for ( int i = 0; i < N; i++ )
+                result[ i ] = Sudoku[ i * N + which ];
 
             return result;
         }
 
-        static int[] Block(int which)
+        static int[] Block( int which )
         {
-            int[] result = new int[N];
+            int[] result = new int[ N ];
 
             // Take all the rows that form the block, and with the correct offset, write the relevant spaces to the result.
             int[] currentRow;
             int offset = (which % sqrtN) * sqrtN;
-            for (int row = 0; row < sqrtN; row++)
+            for ( int row = 0; row < sqrtN; row++ )
             {
-                currentRow = Row((which / sqrtN * sqrtN) + row);
+                currentRow = Row( (which / sqrtN * sqrtN) + row );
 
-                for (int i = 0; i < sqrtN; i++)
-                    result[i + (row * sqrtN)] = currentRow[i + offset];
+                for ( int i = 0; i < sqrtN; i++ )
+                    result[ i + (row * sqrtN) ] = currentRow[ i + offset ];
             }
             return result;
         }
 
         static int FindFirstEmpty()
         {
-            for (int i = 0; i < Nsq; i++)
+            for ( int i = 0; i < Nsq; i++ )
             {
-                if (Sudoku[i] == 0)
+                if ( Sudoku[ i ] == 0 )
                     return i;
             }
 
@@ -165,54 +220,56 @@ namespace Poging2
 
         static void Print()
         {
-            for (int i = 0; i < N; i++)
+            for ( int i = 0; i < N; i++ )
             {
-                for (int j = 0; j < N; j++)
+                for ( int j = 0; j < N; j++ )
                 {
-                    if (Sudoku[i * N + j] == 0)
-                        Console.Write(".");
+                    if ( Sudoku[ i * N + j ] == 0 )
+                        Console.Write( "." );
                     else
-                        Console.Write(Sudoku[i * N + j]);
+                        Console.Write( Sudoku[ i * N + j ] );
                 }
-                Console.Write("\n");
+                Console.Write( "\n" );
             }
-            Console.WriteLine("");
+            Console.WriteLine( "" );
         }
 
-        static int[] ParseTxtToArray(string Path)
-        {            
-            string[] totString = new string[Nsq];
-            StreamReader sr = new StreamReader(Path);
+        static int[] ParseTxtToArray( string Path )
+        {
+            string[] totString = new string[ Nsq ];
+            StreamReader sr = new StreamReader( Path );
             String read = sr.ReadLine();
             String[] sa;
             int offset = 0;
-            while (read != null && read != "")
+            while ( read != null && read != "" )
             {
-                sa = read.Split(' ');
-                for (int j = 0; j < N; j++)
+                sa = read.Split( ' ' );
+                for ( int j = 0; j < N; j++ )
                 {
-                    totString[offset + j] = sa[j];
-                }    
-                
+                    totString[ offset + j ] = sa[ j ];
+                }
+
                 read = sr.ReadLine();
                 offset += N;
             }
 
-            int[] result = new int[Nsq];
+            int[] result = new int[ Nsq ];
 
             // Traverse the entire string, adding the chars to the array in int form.
-            for (int i = 0; i < Nsq; i++)
+            for ( int i = 0; i < Nsq; i++ )
             {
                 // An empty space
-                if (totString[i] == ".")
-                    result[i] = 0;
+                if ( totString[ i ] == "." )
+                    result[ i ] = 0;
                 // A non-empty space
                 else
-                    result[i] = int.Parse(totString[i]);
+                    result[ i ] = int.Parse( totString[ i ] );
             }
 
             return result;
 
         }
+
+        #endregion
     }
 }
