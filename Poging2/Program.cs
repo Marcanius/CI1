@@ -16,18 +16,22 @@ namespace Poging2
         static int N, Nsq, sqrtN, posFreeIndex = -1;
         static bool done = false;
         static Stopwatch stopWatch;
+        static int timeSince = 0;
+        static long amountBT = 0;
+        static long amountFS = 0;
+        static long amountNS = 0;
 
         static void Main(string[] args)
         {
-            N = 9;
+            N = 16;
             Nsq = N * N;
             sqrtN = (int)Math.Sqrt(N);
             Sudoku = new int[Nsq];
             positionsChanged = new Stack<int>();
             // Fill the empty Sudoku
-            Sudoku = ParseTxtToArray("C:\\Users\\Merlijn\\Documents\\Visual Studio 2015\\Projects\\Backtrack\\Backtrack\\CI1\\Poging2\\TestSudokuVeryEz.txt");
+            Sudoku = ParseTxtToArray("E:\\Documents\\Visual Studio 2015\\Projects\\CI 1\\CI1\\CI1\\16puzzel.txt");
 
-            positionsFree = getFreePoss(false);
+            positionsFree = getFreePoss(!true);
             stopWatch = new Stopwatch();
             stopWatch.Start();
             // Do The Twerk(tm)
@@ -42,10 +46,12 @@ namespace Poging2
         static int[] getFreePoss(bool nonVariant = true)
         {
             List<Tuple<int, int>> MovesPerFreeSpace = new List<Tuple<int, int>>();
+            //PriorityQueue<OurTuple> MovesPerFreeSpace = new PriorityQueue<OurTuple>();
+
             int j = 0;
             int[] tmp = new int[Nsq];
             int[] result;
-            if (nonVariant)
+            if (nonVariant) // Standaard
             {
                 for (int i = 0; i < Nsq; i++)
                 {
@@ -61,7 +67,7 @@ namespace Poging2
                     result[i] = tmp[i];
                 }
             }
-            else
+            else //Modified
             {
                 for (int i = 0; i < Nsq; i++)
                 {
@@ -82,18 +88,19 @@ namespace Poging2
                                  !HasDuplicate2(block, n))
                                 itemTwo++;
                         }
-                        Tuple<int, int> resultSpace = new Tuple<int, int>(i, itemTwo);
+                        Tuple<int,int> resultSpace = new Tuple<int, int>(i, itemTwo);
                         MovesPerFreeSpace.Add(resultSpace);
                     }
                 }
-                MovesPerFreeSpace.Sort((x, y) => x.Item2.CompareTo(y.Item2));
-                result = new int[MovesPerFreeSpace.Count];
-                for (int i = 0; i < MovesPerFreeSpace.Count; i++)
+                //MovesPerFreeSpace.Sort((x, y) => x.Item2.CompareTo(y.Item2));
+                MovesPerFreeSpace = MovesPerFreeSpace.OrderBy(x => x.Item2).ToList();
+                result = new int[MovesPerFreeSpace.Count()];
+                for (int i = 0; i < MovesPerFreeSpace.Count(); i++)
                 {
                     result[i] = MovesPerFreeSpace[i].Item1;
                 }
             }
-            
+
             return result;
         }
 
@@ -101,6 +108,13 @@ namespace Poging2
 
         static void BackTrack()
         {
+            amountBT++;
+            if (stopWatch.Elapsed.Seconds > timeSince)
+            {
+                Console.WriteLine(amountBT);
+                timeSince += 10;
+                //Console.WriteLine(".");
+            }
             // Faillure
             if (FailureTest())
             {
@@ -111,6 +125,9 @@ namespace Poging2
             if (!Sudoku.Contains(0))
             {
                 Console.WriteLine("Done and found!");
+                Console.WriteLine("Backtrack: " + amountBT);
+                Console.WriteLine("First Successor: " + amountFS);
+                Console.WriteLine("Next Successor: " + amountNS);
                 done = true;
                 return;
             }
@@ -132,11 +149,13 @@ namespace Poging2
 
         static void FirstSuccessor()
         {
+            amountFS++;
             posFreeIndex++;
         }
 
         static bool NextSuccessor()
         {
+            amountNS++;
             int pos = positionsFree[posFreeIndex];
             if (Sudoku[pos] == N)
             {
@@ -296,5 +315,5 @@ namespace Poging2
         }
 
         #endregion
-    }
+    }   
 }

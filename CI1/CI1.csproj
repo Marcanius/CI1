@@ -55,6 +55,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="16puzzel.txt" />
+    <Content Include="25puzzel.txt" />
     <Content Include="TestSudokuNotVeryEz.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
